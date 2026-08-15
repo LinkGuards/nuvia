@@ -213,7 +213,7 @@ export function renderGenerator(container) {
   var exampleLink = document.getElementById('gen-example-link');
   exampleLink.addEventListener('click', function(e) {
     e.preventDefault();
-    var exampleUrl = 'https://cdn2.videy.co/video123.mp4';
+    var exampleUrl = 'https://cdn2.videy.co/LRhbugxP1.mp4';
     urlInput.value = exampleUrl;
     urlInput.dispatchEvent(new Event('input'));
   });
