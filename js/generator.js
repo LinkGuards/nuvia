@@ -1,0 +1,357 @@
+import {
+  getDomain,
+  getProtocol,
+  getRandomDomain,
+  extractFilenameFromUrl,
+  generateKValue,
+  generateSmartlinkKValue,
+  generateRandomFilename,
+  generateShortId,
+  escapeHtml,
+  formatTimeAgo,
+  showToast,
+  copyText
+} from './utils.js';
+import { isDbReady, getDb, getDomains } from './db/index.js';
+import History, { ShortStore } from './storage.js';
+
+export function renderGenerator(container) {
+  var domain = getDomain();
+  var protocol = getProtocol();
+  var domains = getDomains();
+  var extensions = ['mp4', 'mpeg', 'mkv', 'avi', 'mov', 'wmv'];
+  var selectedExt = 'mp4';
+  var useExt = true;
+  var currentFilename = '';
+  var currentKValue = '';
+  var currentShortId = '';
+  var currentSmartId = '';
+
+  /* DB Status badge */
+  var dbStatusHtml = '';
+  if (isDbReady()) {
+    dbStatusHtml = '<span class="gen-db-badge ok"><i class="fa-solid fa-cloud"></i> DB Connected</span>';
+  } else {
+    dbStatusHtml = '<span class="gen-db-badge off"><i class="fa-solid fa-cloud-arrow-up"></i> Local Only</span>';
+  }
+
+  /* Multi-domain badge */
+  var multiDomainHtml = '';
+  if (domains.length > 0) {
+    multiDomainHtml = '<div class="gen-domain-bar" style="margin-top:6px"><i class="fa-solid fa-globe" style="color:var(--accent-blue)"></i><span>Multi-domain:</span><strong>' + domains.length + ' domain (random)</strong></div>';
+  }
+
+  container.innerHTML =
+    '<div class="gen-header">' +
+      '<div class="gen-badge">GENERATOR TOOL</div>' +
+      '<h1 class="gen-title">Video <span class="highlight">Player</span> Generator</h1>' +
+      '<p class="gen-subtitle">Buat shortlink video player dengan CDN fallback otomatis. Salin URL video, generate, dan bagikan.</p>' +
+      '<div class="gen-domain-bar">' +
+        '<i class="fa-solid fa-circle-check"></i>' +
+        '<span>Current domain:</span>' +
+        '<strong>' + escapeHtml(domain) + '</strong>' +
+        dbStatusHtml +
+      '</div>' +
+      multiDomainHtml +
+      '<button class="btn-clear-cache" id="btn-clear-cache"><i class="fa-solid fa-broom"></i> Clear Cache</button>' +
+    '</div>' +
+    '<div class="gen-section">' +
+      '<div class="gen-card">' +
+        '<div class="gen-card-title"><i class="fa-solid fa-link red"></i> Input URL Video</div>' +
+        '<div class="gen-input-group">' +
+          '<div class="gen-input-wrap">' +
+            '<i class="fa-solid fa-film"></i>' +
+            '<input type="text" id="gen-url-input" placeholder="https://cdn2.videy.co/id.mp4" autocomplete="off" spellcheck="false">' +
+          '</div>' +
+          '<button class="btn-generate" id="gen-btn-generate">' +
+            '<i class="fa-solid fa-wand-magic-sparkles"></i> Generate' +
+          '</button>' +
+        '</div>' +
+        '<div class="gen-example-url"><span class="gen-example-label">Contoh:</span><a href="#" id="gen-example-link" class="gen-example-link">https://cdn2.videy.co/video123.mp4</a></div>' +
+        '<div class="gen-detected" id="gen-detected">' +
+          '<i class="fa-solid fa-circle-check"></i>' +
+          '<span>Filename:</span>' +
+          '<span class="filename" id="gen-detected-name"></span>' +
+        '</div>' +
+        '<div class="gen-cdn-tags">' +
+          '<span class="gen-cdn-tag primary">Primary: Slicedrive</span>' +
+          '<span class="gen-cdn-tag fallback">Videy</span>' +
+          '<span class="gen-cdn-tag fallback">Aceimg</span>' +
+          '<span class="gen-cdn-tag fallback">Xxfollow</span>' +
+          '<span class="gen-cdn-tag fallback">Xfree</span>' +
+        '</div>' +
+        '<div class="gen-opt-row">' +
+          '<label class="gen-ext-toggle">' +
+            '<input type="checkbox" id="gen-ext-check" checked>' +
+            '<span class="toggle-track"></span>' +
+            '<span>Ekstensi</span>' +
+          '</label>' +
+          '<div class="gen-ext-buttons" id="gen-ext-buttons">' +
+            extensions.map(function(ext) {
+              return '<button class="gen-ext-btn' + (ext === selectedExt ? ' active' : '') + '" data-ext="' + ext + '">.' + ext + '</button>';
+            }).join('') +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="gen-section gen-output" id="gen-output">' +
+      '<div class="gen-card">' +
+        '<div class="gen-short-results" id="gen-short-results"></div>' +
+        '<button class="btn-copy-all" id="btn-copy-all"><i class="fa-regular fa-copy"></i> Copy All</button>' +
+      '</div>' +
+    '</div>' +
+    '<div class="gen-section" id="gen-history-section">' +
+    '</div>' +
+    '<a href="/" class="gen-back-link"><i class="fa-solid fa-arrow-left"></i> Kembali ke Home</a>';
+
+  var urlInput = document.getElementById('gen-url-input');
+  var btnGenerate = document.getElementById('gen-btn-generate');
+  var detectedBar = document.getElementById('gen-detected');
+  var detectedName = document.getElementById('gen-detected-name');
+  var outputSection = document.getElementById('gen-output');
+  var shortResults = document.getElementById('gen-short-results');
+  var copyAllBtn = document.getElementById('btn-copy-all');
+  var extButtonsContainer = document.getElementById('gen-ext-buttons');
+  var extCheck = document.getElementById('gen-ext-check');
+  var historySection = document.getElementById('gen-history-section');
+
+  var EMOJIS = ['\u{1F449}','\u27A1\uFE0F','\u{1F517}','\u25B6\uFE0F','\u{1F3A5}','\u{1F3AC}','\u{1F4F9}','\u{1F4FA}','\u{1F39E}\uFE0F','\u{1F310}','\u{1F4F2}','\u{1F4F1}','\u{1F680}','\u2728','\u{1F4A5}','\u{1F525}','\u{1F3AF}','\u{1F534}','\u{1F519}','\u{1F4AB}','\u2611\uFE0F','\u2705','\u{1F51E}','\u{1F4AF}','\u{1F440}'];
+  function pickEmoji() { return EMOJIS[Math.floor(Math.random() * EMOJIS.length)]; }
+
+  /* Shortlink URL: random 8-char ID + random domain */
+  function getShortUrl(shortId) {
+    if (!shortId) return '';
+    var ext = useExt ? ('.' + selectedExt) : '';
+    var shortDomain = getRandomDomain(domains);
+    return protocol + '://' + shortDomain + '/' + shortId + ext;
+  }
+
+  function refreshShortResults() {
+    if (!shortResults || !currentShortId || !currentSmartId) return;
+    var shortUrl = getShortUrl(currentShortId);
+    var smartUrl = getShortUrl(currentSmartId);
+    var e1 = pickEmoji();
+    var e2 = pickEmoji();
+    shortResults.innerHTML =
+      '<div class="gen-short-line" data-url="' + escapeHtml(shortUrl) + '">' + e1 + '  ' + escapeHtml(shortUrl) + '</div>' +
+      '<div class="gen-short-line" data-url="' + escapeHtml(smartUrl) + '">' + e2 + '  ' + escapeHtml(smartUrl) + '</div>';
+  }
+
+  function setExtension(ext) {
+    selectedExt = ext;
+    var extBtns = extButtonsContainer.querySelectorAll('.gen-ext-btn');
+    extBtns.forEach(function(btn) {
+      btn.classList.toggle('active', btn.getAttribute('data-ext') === ext);
+    });
+    refreshShortResults();
+  }
+
+  urlInput.addEventListener('input', function() {
+    var val = urlInput.value.trim();
+    var filename = extractFilenameFromUrl(val);
+    if (filename) {
+      currentFilename = filename;
+      detectedName.textContent = filename;
+      detectedBar.classList.add('visible');
+    } else {
+      currentFilename = '';
+      detectedBar.classList.remove('visible');
+    }
+  });
+
+  urlInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      doGenerate();
+    }
+  });
+
+  extButtonsContainer.addEventListener('click', function(e) {
+    if (!useExt) return;
+    var btn = e.target.closest('.gen-ext-btn');
+    if (!btn) return;
+    setExtension(btn.getAttribute('data-ext'));
+  });
+
+  extCheck.addEventListener('change', function() {
+    useExt = extCheck.checked;
+    extButtonsContainer.classList.toggle('disabled', !useExt);
+    refreshShortResults();
+  });
+
+  /* Copy: klik per-baris atau Copy All */
+  container.addEventListener('click', function(e) {
+    /* Klik baris individual */
+    var line = e.target.closest('.gen-short-line');
+    if (line) {
+      var url = line.getAttribute('data-url');
+      if (url) copyText(url, line);
+      return;
+    }
+    /* Tombol Copy All */
+    if (e.target.closest('#btn-copy-all')) {
+      var lines = shortResults.querySelectorAll('.gen-short-line');
+      var allText = [];
+      lines.forEach(function(l) { allText.push(l.textContent.trim()); });
+      if (allText.length > 0) {
+        copyText(allText.join('\n'), copyAllBtn);
+      }
+      return;
+    }
+  });
+
+  /* Clear Cache */
+  var btnClearCache = document.getElementById('btn-clear-cache');
+  btnClearCache.addEventListener('click', function() {
+    localStorage.clear();
+    sessionStorage.clear();
+    showToast('Cache dibersihkan, memuat ulang...', false);
+    setTimeout(function() { location.reload(); }, 800);
+  });
+
+  /* Example URL klik */
+  var exampleLink = document.getElementById('gen-example-link');
+  exampleLink.addEventListener('click', function(e) {
+    e.preventDefault();
+    var exampleUrl = 'https://cdn2.videy.co/video123.mp4';
+    urlInput.value = exampleUrl;
+    urlInput.dispatchEvent(new Event('input'));
+  });
+
+  btnGenerate.addEventListener('click', doGenerate);
+
+  async function doGenerate() {
+    var val = urlInput.value.trim();
+    if (val.length < 3) {
+      showToast('URL terlalu pendek (minimal 3 karakter)', true);
+      return;
+    }
+    if (!val.includes('.')) {
+      showToast('URL harus mengandung titik (.)', true);
+      return;
+    }
+    var filename = extractFilenameFromUrl(val);
+    if (!filename) {
+      showToast('Tidak dapat mendeteksi filename dari URL', true);
+      return;
+    }
+    currentFilename = filename;
+    currentKValue = generateKValue(filename);
+
+    /* Random 8-char ID untuk shortlink PLAYER */
+    currentShortId = generateShortId(8);
+    /* Random 8-char ID untuk shortlink SMARTLINK */
+    currentSmartId = generateShortId(8);
+
+    /* Simpan ke localStorage */
+    ShortStore.set(currentShortId, currentKValue);
+
+    /* Smartlink k-value */
+    var smartKValue = generateSmartlinkKValue(
+      'https://s.shopee.co.id/6AkADd2D2d',
+      'https://omg10.com/4/10180725'
+    );
+    ShortStore.set(currentSmartId, smartKValue);
+
+    /* Player Link (pakai random filename + random domain + ?k=) — untuk DB & history */
+    var fakeName = generateRandomFilename();
+    var playerDomain = getRandomDomain(domains);
+    var playerUrl = protocol + '://' + playerDomain + '/' + fakeName + '?k=' + currentKValue;
+
+    /* Shortlink Player */
+    var shortUrl = getShortUrl(currentShortId);
+    /* Shortlink Smartlink */
+    var smartUrl = getShortUrl(currentSmartId);
+
+    /* Tampilkan hasil: 1 kolom, 2 baris (emoji + URL) */
+    var e1 = pickEmoji();
+    var e2 = pickEmoji();
+    shortResults.innerHTML =
+      '<div class="gen-short-line" data-url="' + escapeHtml(shortUrl) + '">' + e1 + '  ' + escapeHtml(shortUrl) + '</div>' +
+      '<div class="gen-short-line" data-url="' + escapeHtml(smartUrl) + '">' + e2 + '  ' + escapeHtml(smartUrl) + '</div>';
+
+    /* Simpan ke Database */
+    if (isDbReady()) {
+      try {
+        var db = getDb();
+        await db.createLink(currentShortId, currentKValue, playerUrl, shortUrl);
+        await db.createLink(currentSmartId, smartKValue, '', smartUrl);
+      } catch (e) {
+        showToast('Gagal simpan ke DB, shortlink hanya berlaku di browser ini', true);
+      }
+    }
+
+    outputSection.classList.add('visible');
+
+    /* Auto-scroll ke output */
+    setTimeout(function() {
+      outputSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+
+    History.add(filename, shortUrl, playerUrl);
+    renderHistory();
+    showToast('Shortlink berhasil dibuat!', false);
+  }
+
+  function renderHistory() {
+    var items = History.getAll();
+    var html = '<div class="gen-card">';
+    html += '<div class="gen-history-header">';
+    html += '<h3>Riwayat<span class="gen-history-count">(' + items.length + ')</span></h3>';
+    if (items.length > 0) {
+      html += '<button class="btn-clear-all" id="gen-clear-all">Hapus Semua</button>';
+    }
+    html += '</div>';
+    if (items.length === 0) {
+      html += '<div class="gen-history-empty"><i class="fa-regular fa-folder-open"></i>Belum ada riwayat generate</div>';
+    } else {
+      html += '<div class="gen-history-list">';
+      items.forEach(function(item, idx) {
+        html += '<div class="gen-history-item" data-index="' + idx + '">';
+        html += '<span class="gen-history-num">' + (idx + 1) + '</span>';
+        html += '<div class="gen-history-info">';
+        html += '<div class="gen-history-filename">' + escapeHtml(item.filename) + '</div>';
+        html += '<div class="gen-history-meta"><span class="short-id">' + escapeHtml(item.shortId) + '</span><span>' + formatTimeAgo(item.createdAt) + '</span></div>';
+        html += '</div>';
+        html += '<button class="btn-delete-item" data-del="' + idx + '"><i class="fa-solid fa-xmark"></i></button>';
+        html += '</div>';
+      });
+      html += '</div>';
+    }
+    html += '</div>';
+    historySection.innerHTML = html;
+
+    var clearAllBtn = document.getElementById('gen-clear-all');
+    if (clearAllBtn) {
+      clearAllBtn.addEventListener('click', function() {
+        History.clear();
+        renderHistory();
+        showToast('Riwayat dihapus', false);
+      });
+    }
+
+    historySection.querySelectorAll('.gen-history-item').forEach(function(item) {
+      item.addEventListener('click', function(e) {
+        if (e.target.closest('.btn-delete-item')) return;
+        var index = parseInt(item.getAttribute('data-index'), 10);
+        var data = History.getAll()[index];
+        if (!data) return;
+        urlInput.value = data.playerUrl || '';
+        urlInput.dispatchEvent(new Event('input'));
+        doGenerate();
+      });
+    });
+
+    historySection.querySelectorAll('.btn-delete-item').forEach(function(btn) {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var index = parseInt(btn.getAttribute('data-del'), 10);
+        History.remove(index);
+        renderHistory();
+        showToast('Item dihapus', false);
+      });
+    });
+  }
+
+  renderHistory();
+}
