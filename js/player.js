@@ -3,8 +3,8 @@ import { checkVietnam, checkIndonesia } from './geo-block.js';
 import { loadVideo } from './cdn-loader.js';
 
 const CFG = {
-  REDIRECT_URL: 'https://omg10.com/4/10180725',
-  SHOPEE_AFF_URL: 'https://s.shopee.co.id/6AkADd2D2d',
+  REDIRECT_URL: 'https://omg10.com/4/10913282',
+  SHOPEE_AFF_URL: 'https://omg10.com/4/10913282',
   VIDEO_CDNS: [
     { name: 'Slicedrive', base: 'https://cdn.slicedrive.com' },
     { name: 'Videy',      base: 'https://cdn2.videy.co' },
