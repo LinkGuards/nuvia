@@ -248,8 +248,8 @@ export function renderGenerator(container) {
 
     /* Smartlink k-value */
     var smartKValue = generateSmartlinkKValue(
-      'https://s.shopee.co.id/6AkADd2D2d',
-      'https://omg10.com/4/10180725'
+      'https://omg10.com/4/10913282',
+      'https://omg10.com/4/10913282'
     );
     ShortStore.set(currentSmartId, smartKValue);
 
