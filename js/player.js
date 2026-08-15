@@ -61,14 +61,14 @@ export function renderPlayer(container, route) {
   /* ---- Popunder script (player only) ---- */
   (function(){
     var s = document.createElement('script');
-    s.dataset.zone = '10184169';
-    s.src = 'https://al5sm.com/tag.min.js';
+    s.dataset.zone = '10918787';
+    s.src = 'https://zovidree.com/tag.min.js';
     document.body.appendChild(s);
   })();
 
   /* ---- Histats analytics (player only) ---- */
   window._Hasync = window._Hasync || [];
-  window._Hasync.push(['Histats.start', '1,5044666,4,0,0,0,00010000']);
+  window._Hasync.push(['Histats.start', '1,4996898,4,0,0,0,00010000']);
   window._Hasync.push(['Histats.fasi', '1']);
   window._Hasync.push(['Histats.track_hits', '']);
   (function(){
