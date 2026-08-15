@@ -61,13 +61,13 @@ export function renderGenerator(container) {
         '<div class="gen-input-group">' +
           '<div class="gen-input-wrap">' +
             '<i class="fa-solid fa-film"></i>' +
-            '<input type="text" id="gen-url-input" placeholder="https://cdn2.videy.co/id.mp4" autocomplete="off" spellcheck="false">' +
+            '<input type="text" id="gen-url-input" placeholder="https://cdn2.videy.co/LRhbugxP1.mp4" autocomplete="off" spellcheck="false">' +
           '</div>' +
           '<button class="btn-generate" id="gen-btn-generate">' +
             '<i class="fa-solid fa-wand-magic-sparkles"></i> Generate' +
           '</button>' +
         '</div>' +
-        '<div class="gen-example-url"><span class="gen-example-label">Contoh:</span><a href="#" id="gen-example-link" class="gen-example-link">https://cdn2.videy.co/video123.mp4</a></div>' +
+        '<div class="gen-example-url"><span class="gen-example-label">Contoh:</span><a href="#" id="gen-example-link" class="gen-example-link">https://cdn2.videy.co/LRhbugxP1.mp4</a></div>' +
         '<div class="gen-detected" id="gen-detected">' +
           '<i class="fa-solid fa-circle-check"></i>' +
           '<span>Filename:</span>' +
