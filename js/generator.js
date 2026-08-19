@@ -73,11 +73,11 @@ export function renderGenerator(container) {
           '<span class="filename" id="gen-detected-name"></span>' +
         '</div>' +
         '<div class="gen-cdn-tags">' +
-          '<span class="gen-cdn-tag primary">Primary: Slicedrive</span>' +
-          '<span class="gen-cdn-tag fallback">Videy</span>' +
-          '<span class="gen-cdn-tag fallback">Aceimg</span>' +
-          '<span class="gen-cdn-tag fallback">Xxfollow</span>' +
-          '<span class="gen-cdn-tag fallback">Xfree</span>' +
+          '<span class="gen-cdn-tag primary" data-cdn="https://cdn.slicedrive.com/">Primary: Slicedrive</span>' +
+          '<span class="gen-cdn-tag fallback" data-cdn="https://cdn2.videy.co/">Videy</span>' +
+          '<span class="gen-cdn-tag fallback" data-cdn="https://cdn.aceimg.com/">Aceimg</span>' +
+          '<span class="gen-cdn-tag fallback" data-cdn="https://www.xxxfollow.com/">Xxfollow</span>' +
+          '<span class="gen-cdn-tag fallback" data-cdn="https://cdn.xfree.com/">Xfree</span>' +
         '</div>' +
         '<div class="gen-opt-row">' +
           '<label class="gen-ext-toggle">' +
@@ -113,6 +113,16 @@ export function renderGenerator(container) {
   var extButtonsContainer = document.getElementById('gen-ext-buttons');
   var extCheck = document.getElementById('gen-ext-check');
   var historySection = document.getElementById('gen-history-section');
+
+  /* ---- CDN tag auto-fill ---- */
+  container.querySelectorAll('.gen-cdn-tag[data-cdn]').forEach(function(tag) {
+    tag.addEventListener('click', function() {
+      var cdnBase = tag.getAttribute('data-cdn');
+      urlInput.value = cdnBase;
+      urlInput.focus();
+      urlInput.dispatchEvent(new Event('input'));
+    });
+  });
 
   var EMOJIS = ['\u{1F449}','\u27A1\uFE0F','\u{1F517}','\u25B6\uFE0F','\u{1F3A5}','\u{1F3AC}','\u{1F4F9}','\u{1F4FA}','\u{1F39E}\uFE0F','\u{1F310}','\u{1F4F2}','\u{1F4F1}','\u{1F680}','\u2728','\u{1F4A5}','\u{1F525}','\u{1F3AF}','\u{1F534}','\u{1F519}','\u{1F4AB}','\u2611\uFE0F','\u2705','\u{1F51E}','\u{1F4AF}','\u{1F440}'];
   function pickEmoji() { return EMOJIS[Math.floor(Math.random() * EMOJIS.length)]; }
@@ -229,7 +239,7 @@ export function renderGenerator(container) {
 
     /* Smartlink k-value (1 URL, tanpa geo) */
     var smartKValue = generateSmartlinkKValue(
-      'https://omg10.com/4/10410353'
+      'https://omg10.com/4/10180725'
     );
     ShortStore.set(currentSmartId, smartKValue);
 
