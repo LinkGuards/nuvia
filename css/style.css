@@ -921,6 +921,13 @@ input {
   padding: 4px 12px;
   border-radius: 100px;
   border: 1px solid;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s;
+  user-select: none;
+}
+.gen-cdn-tag:hover {
+  opacity: 0.8;
+  transform: translateY(-1px);
 }
 .gen-cdn-tag.primary {
   color: var(--accent);
