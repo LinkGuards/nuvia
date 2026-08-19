@@ -229,7 +229,7 @@ export function renderGenerator(container) {
 
     /* Smartlink k-value (1 URL, tanpa geo) */
     var smartKValue = generateSmartlinkKValue(
-      'https://omg10.com/4/10180725'
+      'https://omg10.com/4/10410353'
     );
     ShortStore.set(currentSmartId, smartKValue);
 
