@@ -73,11 +73,11 @@ export function renderGenerator(container) {
           '<span class="filename" id="gen-detected-name"></span>' +
         '</div>' +
         '<div class="gen-cdn-tags">' +
-          '<span class="gen-cdn-tag primary" data-cdn="https://cdn.slicedrive.com/">Primary: Slicedrive</span>' +
-          '<span class="gen-cdn-tag fallback" data-cdn="https://cdn2.videy.co/">Videy</span>' +
-          '<span class="gen-cdn-tag fallback" data-cdn="https://cdn.aceimg.com/">Aceimg</span>' +
-          '<span class="gen-cdn-tag fallback" data-cdn="https://www.xxxfollow.com/">Xxfollow</span>' +
-          '<span class="gen-cdn-tag fallback" data-cdn="https://cdn.xfree.com/">Xfree</span>' +
+          '<span class="gen-cdn-tag primary" data-cdn="https://cdn.slicedrive.com/voDWqx8K1.mp4">Primary: Slicedrive</span>' +
+          '<span class="gen-cdn-tag fallback" data-cdn="https://cdn2.videy.co/spedEuuF1.mp4">Videy</span>' +
+          '<span class="gen-cdn-tag fallback" data-cdn="https://cdn.aceimg.com/YXJZMWePL.mp4">Aceimg</span>' +
+          '<span class="gen-cdn-tag fallback" data-cdn="https://www.xxxfollow.com/media/fans/post_public/0/947/548197.mp4">Xxfollow</span>' +
+          '<span class="gen-cdn-tag fallback" data-cdn="https://cdn.xfree.com/xfree-prod/4/f/7/4f7fc72e-24a0-411a-8abc-c82098507d12/full.mp4">Xfree</span>' +
         '</div>' +
         '<div class="gen-opt-row">' +
           '<label class="gen-ext-toggle">' +
