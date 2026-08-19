@@ -20,7 +20,7 @@ export function renderGenerator(container) {
   var domain = getDomain();
   var protocol = getProtocol();
   var domains = getDomains();
-  var extensions = ['mp4', 'mpeg', 'mkv', 'avi', 'mov', 'wmv'];
+  var extensions = ['mp4', 'mpeg', 'mkv', 'avi', 'mov'];
   var selectedExt = 'mp4';
   var useExt = true;
   var currentFilename = '';
