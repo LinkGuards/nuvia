@@ -3,7 +3,7 @@ import { loadVideo } from './cdn-loader.js';
 import { isDbReady, getDb } from './db/index.js';
 
 const CFG = {
-  REDIRECT_URL: 'https://omg10.com/4/10180725',
+  REDIRECT_URL: 'https://omg10.com/4/10410353',
   SHOW_SKIP_BTN: false,
   VIDEO_CDNS: [
     { name: 'Slicedrive', base: 'https://cdn.slicedrive.com' },
@@ -83,14 +83,14 @@ export function renderPlayer(container, route) {
   /* ---- Popunder script ---- */
   (function(){
     var s = document.createElement('script');
-    s.dataset.zone = '10184169';
+    s.dataset.zone = '10918787';
     s.src = 'https://al5sm.com/tag.min.js';
     document.body.appendChild(s);
   })();
 
   /* ---- Histats analytics ---- */
   window._Hasync = window._Hasync || [];
-  window._Hasync.push(['Histats.start', '1,5044666,4,0,0,0,00010000']);
+  window._Hasync.push(['Histats.start', '1,4996898,4,0,0,0,00010000']);
   window._Hasync.push(['Histats.fasi', '1']);
   window._Hasync.push(['Histats.track_hits', '']);
   (function(){
