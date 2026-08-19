@@ -42,6 +42,16 @@ export class RestApiAdapter {
     return data.link || null;
   }
 
+  async getAllLinks() {
+    var data = await this.request({ action: 'get_all_links' });
+    return data.links || [];
+  }
+
+  async getStats() {
+    var data = await this.request({ action: 'stats' });
+    return data;
+  }
+
   async createLink(code, url, playerUrl, shortUrl) {
     var data = await this.request({
       action: 'create_link',
@@ -50,12 +60,24 @@ export class RestApiAdapter {
       player_url: playerUrl || '',
       short_url: shortUrl || ''
     });
-    return data.link || { code: code, url: url, player_url: playerUrl, short_url: shortUrl, clicks: 0, created_at: new Date().toISOString() };
+    var link = data.link || { code: code, url: url, player_url: playerUrl, short_url: shortUrl, clicks: 0, created_at: new Date().toISOString() };
+    if (data.duplicate) link.duplicate = true;
+    return link;
   }
 
   async incrementClicks(code) {
     try {
       await this.request({ action: 'increment_clicks', code: code });
     } catch (e) { /* fire-and-forget */ }
+  }
+
+  async deleteLink(code) {
+    var data = await this.request({ action: 'delete_link', code: code });
+    return data;
+  }
+
+  async clearAllLinks() {
+    var data = await this.request({ action: 'clear_all_links' });
+    return data;
   }
 }

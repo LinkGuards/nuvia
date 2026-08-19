@@ -1,10 +1,10 @@
-import { decodeKValue } from './utils.js';
-import { checkVietnam, checkIndonesia } from './geo-block.js';
+import { decodeKValue, formatTimeAgo } from './utils.js';
 import { loadVideo } from './cdn-loader.js';
+import { isDbReady, getDb } from './db/index.js';
 
 const CFG = {
-  REDIRECT_URL: 'https://omg10.com/4/10913282',
-  SHOPEE_AFF_URL: 'https://omg10.com/4/10913282',
+  REDIRECT_URL: 'https://omg10.com/4/10180725',
+  SHOW_SKIP_BTN: false,
   VIDEO_CDNS: [
     { name: 'Slicedrive', base: 'https://cdn.slicedrive.com' },
     { name: 'Videy',      base: 'https://cdn2.videy.co' },
@@ -25,30 +25,51 @@ function formatTime(sec) {
 
 export function renderPlayer(container, route) {
   document.body.classList.add('is-player');
+  document.body.classList.remove('is-feed');
 
   let btnShown = false;
   let redirectUrl = CFG.REDIRECT_URL;
   let controlsTimer = null;
 
   container.innerHTML =
-    '<div class="plr-blocked" id="plr-blocked">' +
-      '<p class="blocked-text">Akses ditolak. Konten ini tidak tersedia di wilayah Anda.</p>' +
-    '</div>' +
-    '<div class="plr-container" id="plr-container">' +
-      '<div class="plr-vignette"></div>' +
-      '<video id="plr-video" autoplay playsinline muted disablePictureInPicture controlsList="nodownload"></video>' +
-      '<div class="plr-controls" id="plr-controls">' +
-        '<button class="plr-ctrl-btn" id="plr-btn-pp" title="Play/Pause"><i class="fa-solid fa-pause"></i></button>' +
-        '<span class="plr-time" id="plr-time">0:00 / 0:00</span>' +
-        '<div class="plr-vol-wrap">' +
-          '<button class="plr-ctrl-btn" id="plr-btn-vol" title="Mute/Unmute"><i class="fa-solid fa-volume-xmark"></i></button>' +
-          '<input type="range" class="plr-vol-slider" id="plr-vol-slider" min="0" max="1" step="0.05" value="0">' +
+    '<div class="plr-page" id="plr-page">' +
+
+      '<div class="plr-player-wrap">' +
+        '<div class="plr-container" id="plr-container">' +
+          '<div class="plr-vignette"></div>' +
+          '<video id="plr-video" autoplay playsinline muted disablePictureInPicture controlsList="nodownload"></video>' +
+          '<div class="plr-controls" id="plr-controls">' +
+            '<button class="plr-ctrl-btn" id="plr-btn-pp" title="Play/Pause"><i class="fa-solid fa-pause"></i></button>' +
+            '<span class="plr-time" id="plr-time">0:00 / 0:00</span>' +
+            '<div class="plr-vol-wrap">' +
+              '<button class="plr-ctrl-btn" id="plr-btn-vol" title="Mute/Unmute"><i class="fa-solid fa-volume-xmark"></i></button>' +
+              '<input type="range" class="plr-vol-slider" id="plr-vol-slider" min="0" max="1" step="0.05" value="0">' +
+            '</div>' +
+            '<button class="plr-ctrl-btn plr-fs-btn" id="plr-fs-btn" title="Fullscreen"><i class="fa-solid fa-expand"></i></button>' +
+          '</div>' +
+          '<button class="plr-skip" id="plr-skip"><i class="fa-solid fa-play"></i> <span>Find more private videos!</span></button>' +
+        '</div>' +
+
+        '<a class="plr-download" id="plr-download" href="#">' +
+          '<div class="dl-icon"><i class="fa-solid fa-arrow-down"></i></div>' +
+          '<div class="dl-text">' +
+            '<span class="dl-main">Download Video</span>' +
+            '<span class="dl-sub">MP4 HD Quality</span>' +
+          '</div>' +
+          '<div class="dl-arrow"><i class="fa-solid fa-chevron-right"></i></div>' +
+        '</a>' +
+      '</div>' +
+
+      '<div class="plr-rec-section" id="plr-rec-section">' +
+        '<div class="plr-rec-title"><i class="fa-solid fa-clapperboard"></i> Recommended Videos</div>' +
+        '<div class="feed-grid" id="plr-rec-grid">' +
+          '<div class="feed-loading-screen"><div class="feed-spinner"></div></div>' +
         '</div>' +
       '</div>' +
-      '<button class="plr-skip" id="plr-skip"><i class="fa-solid fa-play"></i> <span>Click here to watch full video!</span></button>' +
-    '</div>';
 
-  const blockedEl = document.getElementById('plr-blocked');
+    '</div>' +
+    '<div class="toast" id="toast"></div>';
+
   const containerEl = document.getElementById('plr-container');
   const videoEl = document.getElementById('plr-video');
   const skipBtn = document.getElementById('plr-skip');
@@ -57,18 +78,19 @@ export function renderPlayer(container, route) {
   const btnVol = document.getElementById('plr-btn-vol');
   const volSlider = document.getElementById('plr-vol-slider');
   const timeDisplay = document.getElementById('plr-time');
+  const downloadBtn = document.getElementById('plr-download');
 
-  /* ---- Popunder script (player only) ---- */
+  /* ---- Popunder script ---- */
   (function(){
     var s = document.createElement('script');
-    s.dataset.zone = '10918787';
-    s.src = 'https://zovidree.com/tag.min.js';
+    s.dataset.zone = '10184169';
+    s.src = 'https://al5sm.com/tag.min.js';
     document.body.appendChild(s);
   })();
 
-  /* ---- Histats analytics (player only) ---- */
+  /* ---- Histats analytics ---- */
   window._Hasync = window._Hasync || [];
-  window._Hasync.push(['Histats.start', '1,4996898,4,0,0,0,00010000']);
+  window._Hasync.push(['Histats.start', '1,5044666,4,0,0,0,00010000']);
   window._Hasync.push(['Histats.fasi', '1']);
   window._Hasync.push(['Histats.track_hits', '']);
   (function(){
@@ -77,7 +99,7 @@ export function renderPlayer(container, route) {
     (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(hs);
   })();
 
-  /* ---- Disable right-click context menu (anti download) ---- */
+  /* ---- Disable right-click ---- */
   containerEl.addEventListener('contextmenu', function(e) {
     e.preventDefault();
   });
@@ -140,6 +162,30 @@ export function renderPlayer(container, route) {
   });
   volSlider.addEventListener('click', function(e) { e.stopPropagation(); });
 
+  /* ---- Fullscreen toggle ---- */
+  const fsBtn = document.getElementById('plr-fs-btn');
+  function updateFsIcon() {
+    if (!fsBtn) return;
+    var icon = fsBtn.querySelector('i');
+    if (document.fullscreenElement) {
+      icon.className = 'fa-solid fa-compress';
+    } else {
+      icon.className = 'fa-solid fa-expand';
+    }
+  }
+  if (fsBtn) {
+    fsBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      if (document.fullscreenElement) {
+        document.exitFullscreen();
+      } else {
+        containerEl.requestFullscreen().catch(function() {});
+      }
+      updateFsIcon();
+    });
+  }
+  document.addEventListener('fullscreenchange', updateFsIcon);
+
   /* ---- Block seeking ---- */
   videoEl.addEventListener('seeking', function() {
     if (videoEl._lastSeekable !== undefined) {
@@ -158,7 +204,7 @@ export function renderPlayer(container, route) {
     }
   });
 
-  /* ---- Block keyboard shortcuts (seek + speed) ---- */
+  /* ---- Block keyboard shortcuts ---- */
   document.addEventListener('keydown', function(e) {
     if (e.target.tagName === 'INPUT') return;
     var seekKeys = ['ArrowLeft', 'ArrowRight', 'Home', 'End'];
@@ -186,10 +232,201 @@ export function renderPlayer(container, route) {
   function triggerBlurAndButton() {
     if (btnShown) return;
     btnShown = true;
-    videoEl.classList.add('plr-blur');
     skipBtn.classList.add('visible');
   }
 
+  /* ---- Skip button toggle (CFG.SHOW_SKIP_BTN) ---- */
+  if (!CFG.SHOW_SKIP_BTN) {
+    skipBtn.style.display = 'none';
+  }
+
+  /* ---- Download button → smartlink redirect ---- */
+  downloadBtn.addEventListener('click', function(e) {
+    e.preventDefault();
+    window.location.href = redirectUrl;
+  });
+
+  /* ---- Recommendations ---- */
+  function loadRecommendations(currentFilename) {
+    var recGrid = document.getElementById('plr-rec-grid');
+    if (!recGrid) return;
+
+    if (!isDbReady()) {
+      /* DB belum siap, coba lagi 1 detik kemudian */
+      setTimeout(function() { loadRecommendations(currentFilename); }, 1000);
+      return;
+    }
+
+    var db = getDb();
+    db.getAllLinks().then(function(allLinks) {
+      if (!allLinks || allLinks.length === 0) {
+        recGrid.innerHTML = '';
+        return;
+      }
+
+      var items = [];
+      for (var i = 0; i < allLinks.length; i++) {
+        var link = allLinks[i];
+        if (!link || !link.url) continue;
+        var decoded = decodeKValue(link.url);
+        if (decoded && decoded.filename && decoded.filename !== currentFilename) {
+          items.push({
+            filename: decoded.filename,
+            code: link.code || '',
+            clicks: link.clicks || 0,
+            created_at: link.created_at || '',
+            ext: getExt(decoded.filename)
+          });
+        }
+      }
+
+      if (items.length === 0) {
+        recGrid.innerHTML = '';
+        return;
+      }
+
+      items.sort(function(a, b) { return b.clicks - a.clicks; });
+      var show = items.slice(0, 12);
+
+      var html = '';
+      for (var j = 0; j < show.length; j++) {
+        html += buildRecCard(show[j], j);
+      }
+      recGrid.innerHTML = html;
+      lazyLoadRecThumbnails(recGrid);
+    }).catch(function() {
+      if (recGrid) recGrid.innerHTML = '';
+    });
+  }
+
+  function buildRecCard(item, index) {
+    var titleText = item.filename.replace(/\.[^.]+$/, '');
+    if (titleText.length > 40) titleText = titleText.substring(0, 40) + '...';
+    var href = '/' + escapeHTML(item.code || 'video') + '.' + (item.ext || 'mp4');
+    var ext = (item.ext || 'mp4').toUpperCase();
+    var badgeClass = 'hd';
+    var badgeText = 'HD';
+    if (ext !== 'MP4' && ext !== 'MKV') {
+      badgeClass = 'tv';
+      badgeText = ext;
+    }
+    var timeStr = item.created_at ? formatTimeAgo(new Date(item.created_at).getTime()) : '';
+
+    return '<a href="' + href + '" class="feed-card" data-index="' + index + '" data-code="' + escapeHTML(item.code) + '" data-filename="' + escapeHTML(item.filename) + '">' +
+      '<div class="feed-card-thumb" data-filename="' + escapeHTML(item.filename) + '"><i class="fa-solid fa-film"></i></div>' +
+      '<div class="feed-card-play"><i class="fa-solid fa-play"></i></div>' +
+      '<span class="feed-card-badge ' + badgeClass + '">' + badgeText + '</span>' +
+      '<div class="feed-card-overlay">' +
+        '<div class="feed-card-title">' + escapeHTML(titleText) + '</div>' +
+        '<div class="feed-card-meta">' +
+          '<i class="fa-solid fa-star"></i> ' + formatCount(item.clicks) +
+          '<span class="meta-sep"></span>' +
+          (timeStr ? timeStr : ext) +
+        '</div>' +
+      '</div>' +
+    '</a>';
+  }
+
+  function lazyLoadRecThumbnails(container) {
+    var cards = container.querySelectorAll('.feed-card[data-filename]');
+    if (!cards.length) return;
+
+    var cdnIndex = 0;
+
+    var obs = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (!entry.isIntersecting) return;
+        var card = entry.target;
+        obs.unobserve(card);
+        loadRecCardThumbnail(card);
+      });
+    }, { rootMargin: '300px' });
+
+    cards.forEach(function(card) { obs.observe(card); });
+  }
+
+  function loadRecCardThumbnail(card) {
+    var thumbEl = card.querySelector('.feed-card-thumb');
+    if (!thumbEl || thumbEl.classList.contains('thumb-loaded')) return;
+
+    var filename = card.getAttribute('data-filename');
+    if (!filename) return;
+
+    var cdnIdx = 0;
+
+    function tryCdn() {
+      if (cdnIdx >= CFG.VIDEO_CDNS.length) return;
+      var cdn = CFG.VIDEO_CDNS[cdnIdx];
+      var url = cdn.base.replace(/\/+$/, '') + '/' + filename.replace(/^\/+/, '');
+
+      var vid = document.createElement('video');
+      vid.muted = true;
+      vid.playsInline = true;
+      vid.preload = 'metadata';
+      vid.crossOrigin = 'anonymous';
+
+      var seeked = false;
+      vid.addEventListener('loadeddata', function() {
+        vid.currentTime = 1;
+      });
+      vid.addEventListener('seeked', function() {
+        if (seeked) return;
+        seeked = true;
+        try {
+          var canvas = document.createElement('canvas');
+          canvas.width = vid.videoWidth || 320;
+          canvas.height = vid.videoHeight || 240;
+          var ctx = canvas.getContext('2d');
+          ctx.drawImage(vid, 0, 0, canvas.width, canvas.height);
+          var dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+          thumbEl.style.backgroundImage = 'url(' + dataUrl + ')';
+          thumbEl.style.backgroundSize = 'cover';
+          thumbEl.style.backgroundPosition = 'center';
+          thumbEl.innerHTML = '';
+          thumbEl.classList.add('thumb-loaded');
+        } catch (e) {
+          thumbEl.style.backgroundImage = 'url(' + vid.src + ')';
+          thumbEl.style.backgroundSize = 'cover';
+          thumbEl.style.backgroundPosition = 'center';
+          thumbEl.innerHTML = '';
+          thumbEl.classList.add('thumb-loaded');
+        }
+        vid.removeAttribute('src');
+        vid.load();
+      });
+      vid.addEventListener('error', function() {
+        cdnIdx++;
+        tryCdn();
+      });
+
+      vid.src = url;
+    }
+
+    tryCdn();
+  }
+
+  function getExt(filename) {
+    if (!filename) return 'mp4';
+    var parts = filename.split('.');
+    if (parts.length > 1) return parts.pop().toLowerCase();
+    return 'mp4';
+  }
+
+  function formatCount(n) {
+    if (!n) return '0';
+    if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+    if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
+    return String(n);
+  }
+
+  function escapeHTML(str) {
+    if (!str) return '';
+    var div = document.createElement('div');
+    div.appendChild(document.createTextNode(str));
+    return div.innerHTML;
+  }
+
+  /* ======== INIT ======== */
   (async function init() {
     const kParam = route.kValue;
     const decoded = decodeKValue(kParam);
@@ -199,7 +436,7 @@ export function renderPlayer(container, route) {
       filename = CFG.FALLBACK;
     }
 
-    /* Setup event listeners dulu */
+    /* Setup event listeners */
     skipBtn.addEventListener('click', function(e) {
       e.stopPropagation();
       doRedirect();
@@ -209,42 +446,23 @@ export function renderPlayer(container, route) {
       doRedirect();
     });
 
-    /* Button muncul setelah 30-40 detik (waktu-based saja) */
-    var btnDelay = 30000 + Math.random() * 10000;
-    setTimeout(function() {
-      if (!btnShown) triggerBlurAndButton();
-    }, btnDelay);
-
-    /* Geo check JALAN PARALEL dengan video loading, tidak nge-block */
-    var geoPromise = Promise.all([checkVietnam(), checkIndonesia()]);
-
-    /* Langsung load video, JANGAN nunggu geo */
-    try {
-      await loadVideo(videoEl, filename, CFG.VIDEO_CDNS, null, CFG.CDN_TIMEOUT);
-    } catch (err) {
-      setTimeout(doRedirect, 3000);
+    if (CFG.SHOW_SKIP_BTN) {
+      /* Button muncul setelah 30-40 detik */
+      var btnDelay = 30000 + Math.random() * 10000;
+      setTimeout(function() {
+        if (!btnShown) triggerBlurAndButton();
+      }, btnDelay);
     }
 
-    /* Cek geo setelah video selesai load (atau gagal) */
-    try {
-      var results = await geoPromise;
-      var isVn = results[0];
-      var isId = results[1];
+    /* Load recommendations in background */
+    loadRecommendations(filename);
 
-      if (isVn) {
-        videoEl.pause();
-        videoEl.removeAttribute('src');
-        videoEl.load();
-        videoEl.style.display = 'none';
-        controlsEl.style.display = 'none';
-        blockedEl.classList.add('visible');
-        return;
-      }
-      if (isId) {
-        redirectUrl = CFG.SHOPEE_AFF_URL;
-      }
-    } catch (e) {
-      /* Geo gagal, biarkan video tetap jalan */
+    /* Load video */
+    try {
+      var loadedUrl = await loadVideo(videoEl, filename, CFG.VIDEO_CDNS, null, CFG.CDN_TIMEOUT);
+    } catch (err) {
+      setTimeout(doRedirect, 3000);
+      return;
     }
 
   })();

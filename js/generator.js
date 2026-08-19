@@ -7,6 +7,7 @@ import {
   generateSmartlinkKValue,
   generateRandomFilename,
   generateShortId,
+  decodeKValue,
   escapeHtml,
   formatTimeAgo,
   showToast,
@@ -53,7 +54,6 @@ export function renderGenerator(container) {
         dbStatusHtml +
       '</div>' +
       multiDomainHtml +
-      '<button class="btn-clear-cache" id="btn-clear-cache"><i class="fa-solid fa-broom"></i> Clear Cache</button>' +
     '</div>' +
     '<div class="gen-section">' +
       '<div class="gen-card">' +
@@ -61,13 +61,12 @@ export function renderGenerator(container) {
         '<div class="gen-input-group">' +
           '<div class="gen-input-wrap">' +
             '<i class="fa-solid fa-film"></i>' +
-            '<input type="text" id="gen-url-input" placeholder="https://cdn2.videy.co/LRhbugxP1.mp4" autocomplete="off" spellcheck="false">' +
+            '<input type="text" id="gen-url-input" placeholder="https://cdn2.videy.co/id.mp4" autocomplete="off" spellcheck="false">' +
           '</div>' +
           '<button class="btn-generate" id="gen-btn-generate">' +
             '<i class="fa-solid fa-wand-magic-sparkles"></i> Generate' +
           '</button>' +
         '</div>' +
-        '<div class="gen-example-url"><span class="gen-example-label">Contoh:</span><a href="#" id="gen-example-link" class="gen-example-link">https://cdn2.videy.co/LRhbugxP1.mp4</a></div>' +
         '<div class="gen-detected" id="gen-detected">' +
           '<i class="fa-solid fa-circle-check"></i>' +
           '<span>Filename:</span>' +
@@ -200,24 +199,6 @@ export function renderGenerator(container) {
     }
   });
 
-  /* Clear Cache */
-  var btnClearCache = document.getElementById('btn-clear-cache');
-  btnClearCache.addEventListener('click', function() {
-    localStorage.clear();
-    sessionStorage.clear();
-    showToast('Cache dibersihkan, memuat ulang...', false);
-    setTimeout(function() { location.reload(); }, 800);
-  });
-
-  /* Example URL klik */
-  var exampleLink = document.getElementById('gen-example-link');
-  exampleLink.addEventListener('click', function(e) {
-    e.preventDefault();
-    var exampleUrl = 'https://cdn2.videy.co/LRhbugxP1.mp4';
-    urlInput.value = exampleUrl;
-    urlInput.dispatchEvent(new Event('input'));
-  });
-
   btnGenerate.addEventListener('click', doGenerate);
 
   async function doGenerate() {
@@ -246,10 +227,9 @@ export function renderGenerator(container) {
     /* Simpan ke localStorage */
     ShortStore.set(currentShortId, currentKValue);
 
-    /* Smartlink k-value */
+    /* Smartlink k-value (1 URL, tanpa geo) */
     var smartKValue = generateSmartlinkKValue(
-      'https://omg10.com/4/10913282',
-      'https://omg10.com/4/10913282'
+      'https://omg10.com/4/10180725'
     );
     ShortStore.set(currentSmartId, smartKValue);
 
@@ -274,8 +254,13 @@ export function renderGenerator(container) {
     if (isDbReady()) {
       try {
         var db = getDb();
-        await db.createLink(currentShortId, currentKValue, playerUrl, shortUrl);
-        await db.createLink(currentSmartId, smartKValue, '', smartUrl);
+        var result = await db.createLink(currentShortId, currentKValue, playerUrl, shortUrl);
+        if (result && result.duplicate) {
+          showToast('Video ini sudah ada di database! Duplikat dicegah.', true);
+          outputSection.classList.remove('visible');
+          return;
+        }
+        var smartResult = await db.createLink(currentSmartId, smartKValue, '', smartUrl);
       } catch (e) {
         showToast('Gagal simpan ke DB, shortlink hanya berlaku di browser ini', true);
       }

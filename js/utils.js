@@ -84,8 +84,8 @@ export function slugToK(slug) {
   }
 }
 
-export function generateSmartlinkKValue(idUrl, otherUrl) {
-  var raw = 'SMARTLINK|' + idUrl + '|' + otherUrl;
+export function generateSmartlinkKValue(url) {
+  var raw = 'SMARTLINK|' + url;
   return btoa(raw);
 }
 
@@ -99,9 +99,11 @@ export function decodeKValue(k) {
     const first = parts[0];
     if (!first) return { filename: null };
 
-    /* Cek format smartlink: SMARTLINK|id_url|other_url */
-    if (first === 'SMARTLINK' && parts.length >= 3 && parts[1] && parts[2]) {
-      return { type: 'smartlink', idUrl: parts[1], otherUrl: parts[2] };
+    /* Cek format smartlink: SMARTLINK|url */
+    if (first === 'SMARTLINK' && parts.length >= 2 && parts[1]) {
+      /* Backward compat: old format 3 parts (shopee|omg), new format 2 parts (url) */
+      var smartUrl = parts.length >= 3 ? parts[2] : parts[1];
+      return { type: 'smartlink', url: smartUrl };
     }
 
     /* Validasi: harus terlihat seperti filename video */

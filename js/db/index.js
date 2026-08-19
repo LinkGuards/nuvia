@@ -56,7 +56,7 @@ export async function initDb() {
 
   /* 1. Coba fetch db-config.json dari server */
   try {
-    var res = await fetch(CONFIG_FILE + '?v=9');
+    var res = await fetch(CONFIG_FILE + '?v=11');
     if (res.ok) {
       var config = await res.json();
       if (config && config.type) {

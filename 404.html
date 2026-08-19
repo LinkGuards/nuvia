@@ -1,24 +1,16 @@
 <!DOCTYPE html>
-<html lang="id">
+<html>
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Shopee Indonesia - Jual Beli Online</title>
-<meta property="og:type" content="website">
-<meta property="og:title" content="Promo Diskon Terbaru - Shopee Indonesia">
-<meta property="og:description" content="Jual beli online aman dan nyaman hanya di Shopee. Gratis ongkir, cashback, dan promo menarik lainnya!">
-<meta property="og:image" content="https://shopee.co.id/asset/share_banner.jpg">
-<meta property="og:site_name" content="Shopee">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Promo Diskon Terbaru - Shopee Indonesia">
-<meta name="twitter:description" content="Jual beli online aman dan nyaman hanya di Shopee. Gratis ongkir, cashback, dan promo menarik lainnya!">
-<meta name="twitter:image" content="https://shopee.co.id/asset/share_banner.jpg">
-<script>
-if(/facebookexternalhit|twitterbot|linkedinbot|slackbot|discordbot|whatsapp/i.test(navigator.userAgent)){/* crawler — biarkan baca meta tags */}else{
-var p=location.pathname;
-if(p.indexOf('/g/')===0){window.location.replace('/g/');}else{sessionStorage.setItem('spa_redirect',p+location.search+location.hash);window.location.replace('/');}
-}
-</script>
+  <meta charset="UTF-8">
+  <script>
+    // GitHub Pages SPA redirect: save the 404 path and redirect to /
+    var path = window.location.pathname;
+    var search = window.location.search;
+    if (path !== "/" && path !== "/404.html") {
+      sessionStorage.setItem("spa_redirect", path + search);
+    }
+    window.location.replace("/" + search);
+  </script>
 </head>
 <body></body>
 </html>
