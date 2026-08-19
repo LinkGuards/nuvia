@@ -20,7 +20,7 @@ export function renderGenerator(container) {
   var domain = getDomain();
   var protocol = getProtocol();
   var domains = getDomains();
-  var extensions = ['mp4', 'mpeg', 'mkv', 'avi', 'mov'];
+  var extensions = ['mp4', 'mpeg', 'mkv', 'avi', 'mov', 'wmv'];
   var selectedExt = 'mp4';
   var useExt = true;
   var currentFilename = '';
@@ -54,6 +54,7 @@ export function renderGenerator(container) {
         dbStatusHtml +
       '</div>' +
       multiDomainHtml +
+      '<button class="btn-clear-cache" id="btn-clear-cache"><i class="fa-solid fa-broom"></i> Clear Cache</button>' +
     '</div>' +
     '<div class="gen-section">' +
       '<div class="gen-card">' +
@@ -113,6 +114,16 @@ export function renderGenerator(container) {
   var extButtonsContainer = document.getElementById('gen-ext-buttons');
   var extCheck = document.getElementById('gen-ext-check');
   var historySection = document.getElementById('gen-history-section');
+
+  /* ---- Clear cache / cookie ---- */
+  var clearCacheBtn = document.getElementById('btn-clear-cache');
+  if (clearCacheBtn) {
+    clearCacheBtn.addEventListener('click', function() {
+      try { localStorage.clear(); } catch(e) {}
+      try { sessionStorage.clear(); } catch(e) {}
+      showToast('Cache & cookie berhasil dihapus! Refresh halaman untuk efek penuh.', false);
+    });
+  }
 
   /* ---- CDN tag auto-fill ---- */
   container.querySelectorAll('.gen-cdn-tag[data-cdn]').forEach(function(tag) {
@@ -266,8 +277,31 @@ export function renderGenerator(container) {
         var db = getDb();
         var result = await db.createLink(currentShortId, currentKValue, playerUrl, shortUrl);
         if (result && result.duplicate) {
-          showToast('Video ini sudah ada di database! Duplikat dicegah.', true);
-          outputSection.classList.remove('visible');
+          /* Duplikat — tampilkan shortlink dari entry sebelumnya di DB */
+          var existingPlayerUrl = result.link && result.link.player_url ? result.link.player_url : playerUrl;
+          var existingShortUrl = result.link && result.link.short_url ? result.link.short_url : shortUrl;
+          var existingCode = result.link && result.link.code ? result.link.code : currentShortId;
+
+          var dupShortUrl = getShortUrl(existingCode);
+          var dupSmartUrl = getShortUrl(currentSmartId);
+          var e1 = pickEmoji();
+          var e2 = pickEmoji();
+          shortResults.innerHTML =
+            '<div class="gen-short-line" data-url="' + escapeHtml(dupShortUrl) + '">' + e1 + '  ' + escapeHtml(dupShortUrl) + '</div>' +
+            '<div class="gen-short-line" data-url="' + escapeHtml(dupSmartUrl) + '">' + e2 + '  ' + escapeHtml(dupSmartUrl) + '</div>';
+
+          ShortStore.set(existingCode, currentKValue);
+
+          var smartResult = await db.createLink(currentSmartId, smartKValue, '', smartUrl);
+
+          outputSection.classList.add('visible');
+          setTimeout(function() {
+            outputSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }, 100);
+
+          History.add(filename, dupShortUrl, existingPlayerUrl);
+          renderHistory();
+          showToast('Duplikat! Menampilkan shortlink sebelumnya.', true);
           return;
         }
         var smartResult = await db.createLink(currentSmartId, smartKValue, '', smartUrl);

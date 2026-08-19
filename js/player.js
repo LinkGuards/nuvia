@@ -47,7 +47,7 @@ export function renderPlayer(container, route) {
             '</div>' +
             '<button class="plr-ctrl-btn plr-fs-btn" id="plr-fs-btn" title="Fullscreen"><i class="fa-solid fa-expand"></i></button>' +
           '</div>' +
-          '<button class="plr-skip" id="plr-skip"><i class="fa-solid fa-play"></i> <span>Find more private videos!</span></button>' +
+          '<button class="plr-skip" id="plr-skip"><i class="fa-solid fa-play"></i> <span>Click here to watch full video!</span></button>' +
         '</div>' +
 
         '<a class="plr-download" id="plr-download" href="#">' +
