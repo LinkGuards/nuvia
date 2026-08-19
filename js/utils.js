@@ -195,14 +195,16 @@ export function showToast(msg, isError) {
     clearTimeout(toastTimer);
     toastTimer = null;
   }
+  el.classList.remove('err-toast');
   const iconClass = isError ? 'err' : 'ok';
   const iconName = isError ? 'fa-circle-xmark' : 'fa-circle-check';
   el.innerHTML = '<i class="fa-solid ' + iconName + ' ' + iconClass + '"></i>' + escapeHtml(msg);
+  if (isError) el.classList.add('err-toast');
   el.classList.add('show');
   toastTimer = setTimeout(function() {
-    el.classList.remove('show');
+    el.classList.remove('show', 'err-toast');
     toastTimer = null;
-  }, 2500);
+  }, 3000);
 }
 
 export function copyText(text, btnElement) {
